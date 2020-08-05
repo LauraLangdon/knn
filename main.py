@@ -9,7 +9,8 @@ import numpy as np
 import pickle
 import math
 
-# # Unpickle corpus.txt, tweets.txt, tweet vectors, randomized tweet vectors, train set, test set,
+# # Unpickle corpus.txt, tweets.txt, tweet vectors, randomized tweet vectors,
+#                   train set, test set,
 # infile = open('corpus.txt', 'rb')
 # corpus = pickle.load(infile)
 # infile.close()
