@@ -1,5 +1,5 @@
 Code Documentation
 =================
 
-.. automodule:: main.py
+.. automodule:: main
     :members:
