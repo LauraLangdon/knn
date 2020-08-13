@@ -9,16 +9,20 @@ import numpy as np
 import pickle
 import math
 
-# # Unpickle corpus.txt, tweets.txt, tweet vectors, randomized tweet vectors,
+# Unpickle corpus, tweets, tweet vectors, randomized tweet vectors,
 #                   train set, test set,
-# infile = open('corpus.txt', 'rb')
-# corpus = pickle.load(infile)
-# infile.close()
-#
-# infile = open('tweets.txt', 'rb')
-# all_tweets = pickle.load(infile)
-# infile.close()
-#
+infile = open('corpus.txt', 'rb')
+corpus = pickle.load(infile)
+infile.close()
+
+infile = open('tweets.txt', 'rb')
+all_tweets = pickle.load(infile)
+infile.close()
+
+infile = open('num_trump_tweets.txt', 'rb')
+num_trump_tweets = pickle.load(infile)
+infile.close()
+
 # infile = open('train_set.txt', 'rb')
 # train_set = pickle.load(infile)
 # infile.close()
@@ -26,22 +30,18 @@ import math
 # infile = open('test_set.txt', 'rb')
 # test_set = pickle.load(infile)
 # infile.close()
-
-infile = open('num_tweet_types.txt', 'rb')
-num_trump_tweets = pickle.load(infile)
-infile.close()
-
-infile = open('small_train_set.txt', 'rb')
-train_set = pickle.load(infile)
-infile.close()
-
-infile = open('small_test_set.txt', 'rb')
-test_set = pickle.load(infile)
-infile.close()
-
-infile = open('tweet_vectors.txt', 'rb')
-tweet_vectors = pickle.load(infile)
-infile.close()
+#
+# infile = open('small_train_set.txt', 'rb')
+# train_set = pickle.load(infile)
+# infile.close()
+#
+# infile = open('small_test_set.txt', 'rb')
+# test_set = pickle.load(infile)
+# infile.close()
+#
+# infile = open('tweet_vectors.txt', 'rb')
+# tweet_vectors = pickle.load(infile)
+# infile.close()
 #
 # infile = open('randomized_tweet_vectors.txt', 'rb')
 # randomized_tweet_vectors = pickle.load(infile)
@@ -107,7 +107,7 @@ def csv_list_maker(data_file, delimiter=',') -> list:
 
 def clean_text(corpus, input_string: str) -> list:
     """
-    Clean text data and add to corpus.txt
+    Clean text data and add to corpus
 
     :param corpus: list of all words in the data
     :param input_string: string of words to be added to the corpus
@@ -131,21 +131,31 @@ def clean_text(corpus, input_string: str) -> list:
     return output_string_as_list
 
 
-def split_train_test(tweet_vectors) -> Tuple:
+def randomize_vectors(tweet_vectors):
     """
-    Create train and test sets
 
-    :param tweet_vectors: tweets in vector form
+    :param tweet_vectors:
 
-    :return: train_set, test_set, randomized_tweet_vectors: tuple of train set, test set, and
-                                                            randomized tweet vectors
+    :return: randomized_tweet_vectors: a Numpy array of tweet vectors that have
+                 been randomly shuffled
     """
+    #Initialize randomized tweet vectors
     randomized_tweet_vectors = np.zeros((tweet_vectors.shape[0], tweet_vectors.shape[1]), dtype=int)
     for x in range(tweet_vectors.shape[0]):
         for y in range(tweet_vectors.shape[1]):
             randomized_tweet_vectors[x][y] = tweet_vectors[x][y]
     np.random.shuffle(randomized_tweet_vectors)
 
+    return randomized_tweet_vectors
+
+def split_train_test(tweet_vectors, randomized_tweet_vectors) -> tuple:
+    """
+    Split into train and test sets
+
+    :param tweet_vectors: tweets in vector form
+
+    :return: train_set, test_set tuple of train set and test set
+    """
     x_train_dim = math.floor(0.8 * tweet_vectors.shape[0])  # Use 80% of data for train set
     x_test_dim = math.ceil(0.2 * tweet_vectors.shape[0])  # Use 20% of data for test set
     y_dim = tweet_vectors.shape[1]
@@ -160,7 +170,7 @@ def split_train_test(tweet_vectors) -> Tuple:
         for y in range(y_dim):
             test_set[x][y] = randomized_tweet_vectors[x + x_train_dim][y]
 
-    return train_set, test_set, randomized_tweet_vectors
+    return train_set, test_set
 
 
 def individual_tweet_vectorizer(corpus, tweet, index=0, author=''):
@@ -224,7 +234,7 @@ def knn(tweet_vector, train_set, k) -> list:
 
 def majority_vote(tweet_vector, train_set, k) -> str:
     """
-    Count how many of the k-NN tweets.txt were written by Trump or not-Trump,
+    Count how many of the k-NN tweets were written by Trump or not-Trump,
     and return whichever is larger
 
     :param tweet_vector: vector of given tweet
@@ -276,211 +286,145 @@ def predict(tweet_vector, train_set, k = 9) -> str:
             predict(tweet_vector, train_set, k = k - 2)
         else:
             return 'Draw: no prediction'
-def predict(tweet_vector, train_set, k = 9) -> str:
-    """
-    Predict whether a given tweet was written by Trump
-
-    :param tweet_vector: vector of given tweet
-    :param train_set: training set
-    :param k: desired number of nearest neighbors
-
-    :return: prediction of whether tweet was authored by Trump
-    """
-    if majority_vote(tweet_vector, train_set, k) == 'Trump':
-        return 'Trump'
-    elif majority_vote(tweet_vector, train_set, k) == 'Not Trump':
-        return 'Not Trump'
-    else:
-        if k > 2:
-            predict(tweet_vector, train_set, k = k - 2)
-        else:
-            return 'Draw: no prediction'
 
 
-# # Initial setup of corpus.txt and vectorizers, all of which then get pickled
+# # Initial setup of corpus and vectorizers, all of which then get pickled
 #
-# corpus.txt = []
+# corpus = []
 # all_tweets = []
 #
-# # Get and clean tweet data for Trump (also adds words from tweets.txt to corpus.txt)
-# trump_tweets = read_file('tweets.txt.json', key_name='text')
+# Get and clean tweet data for Trump (also adds words from tweets to corpus)
+# trump_tweets = read_file('tweets.json', key_name='text')
+# num_trump_tweets = len(trump_tweets)    # Store this value to use later for labeling
+#
 # for item in range(len(trump_tweets)):
 #     tweet = trump_tweets[item]
-#     tweet = clean_text(corpus.txt, tweet)
+#     tweet = clean_text(corpus, tweet)
 #     trump_tweets[item] = tweet
 #     all_tweets.append(tweet)
 #
-# print('Finished reading Trump tweets.txt')
+# print('Finished reading Trump tweets')
 #
-# # Get and clean general tweet data (also adds words from tweets.txt to corpus.txt)
+# # Get and clean general tweet data (also adds words from tweets to corpus)
 # raw_general_tweets = read_file('all_annotated.tsv')
 # general_tweets = []
 # for x in raw_general_tweets[1:]:
 #     if x[4] == '1':  # Indicates Tweet is written in English
-#         general_tweets.append(clean_text(corpus.txt, x[3]))
-#         all_tweets.append(clean_text(corpus.txt, x[3]))
+#         general_tweets.append(clean_text(corpus, x[3]))
+#         all_tweets.append(clean_text(corpus, x[3]))
 #
-# print('Finished reading general tweets.txt')
-#
-# # Vectorize tweets.txt
-# tweet_vectors.txt = np.zeros((len(all_tweets), len(corpus.txt) + 2), dtype = int)
-# for word in range(len(corpus.txt)):
-#     for tweet in range(len(all_tweets)):
-#         if corpus.txt[word] in all_tweets[tweet]:
-#             tweet_vectors.txt[tweet][word] = 1
-#
-#
-# # Label tweets.txt as Trump or general, and keep track of index
-# for tweet in range(len(all_tweets)):
-#     if tweet <= len(trump_tweets):
-#         tweet_vectors.txt[tweet][-1] = 1  # Label second-to-last value with 1 for Trump
-#     else:
-#         tweet_vectors.txt[tweet][-1] = 0
-#
-#     tweet_vectors.txt[tweet][-2] = tweet    # Keep track of index in all_tweets for interpretation
-#                                         # after randomization
+# print('Finished reading general tweets')
 
+# Initialize tweet vectors
+tweet_vectors = np.zeros((len(all_tweets), len(corpus) + 2), dtype = int)
+for word in range(len(corpus)):
+    for tweet in range(len(all_tweets)):
+        if corpus[word] in all_tweets[tweet]:
+            tweet_vectors[tweet][word] = 1
 
+print('Finished initializing tweet vectors ')
 
-# # tweet_vectors.txt = individual_tweet_vectorizer(corpus.txt, trump_tweets[0], author = 'trump')
-# for tweet in range(1, len(trump_tweets) - 1):
-#     tweet_vector = individual_tweet_vectorizer(corpus.txt, trump_tweets[tweet], index = tweet, author = 'trump')
-#     tweet_vectors.txt = np.append(tweet_vectors.txt, tweet_vector, axis = 0)
-#     if tweet % 1000 == 0:
-#         print('Vectorizing Trump tweets.txt')
-#         print(tweet_vectors.txt.shape)
-#
-# # Add binary vectors for general tweets.txt compared to corpus.txt
-# for tweet in range(len(general_tweets)):
-#     tweet_vector =individual_tweet_vectorizer(corpus.txt, general_tweets[tweet], index = len(trump_tweets) + 1)
-#     tweet_vectors.txt = np.append(tweet_vectors.txt, tweet_vector, axis = 0)
-#     print('Vectorizing general tweets.txt')
-#     if tweet % 1000 == 0:
-#         print(tweet_vectors.txt.shape)
+# Label tweets as Trump or general, and keep track of index
+for i in range(len(all_tweets)):
+    if i <= num_trump_tweets:
+        tweet_vectors[i][-1] = 1  # Label second-to-last value with 1 for Trump
+    else:
+        tweet_vectors[i][-1] = 0
+
+    tweet_vectors[i][-2] = i   # Keep track of index in all_tweets for interpretation
+                                                             # after randomization
+
+print('Finished labelling tweets')
+print('tweet_vectors.shape: ')
+print(tweet_vectors.shape)
 
 # Make train and test sets
-# train_set.txt, test_set.txt, randomized_tweet_vectors.txt = split_train_test(tweet_vectors.txt)
-# print('train set shape')
-# print(train_set.txt.shape)
-# print('test set shape')
-# print(test_set.txt.shape)
-#
-# print('randomized vectors shape')
-# print(randomized_tweet_vectors.txt.shape)
+randomized_tweet_vectors = randomize_vectors(tweet_vectors)
+print('randomized vectors shape')
+print(randomized_tweet_vectors.shape)
 
-# Pickle corpus.txt, tweets.txt, tweet vectors, randomized tweet vectors, train set, test set,
-# number of Trump tweets.txt, and number of general tweets.txt
+train_set, test_set = split_train_test(tweet_vectors, randomized_tweet_vectors)
+print('train set shape')
+print(train_set.shape)
+print('test set shape')
+print(test_set.shape)
+
+# # Pickle corpus, tweets, tweet vectors, randomized tweet vectors, train set, and test set
 # filename = 'corpus.txt'
 # outfile = open(filename, 'wb')
-# pickle.dump(corpus.txt, outfile)
+# pickle.dump(corpus, outfile)
 # outfile.close()
 #
 # filename = 'tweets.txt'
 # outfile = open(filename, 'wb')
 # pickle.dump(all_tweets, outfile)
 # outfile.close()
-#
-# filename = 'tweet_vectors.txt'
+
+# filename = 'num_trump_tweets.txt'
 # outfile = open(filename, 'wb')
-# pickle.dump(tweet_vectors.txt, outfile)
-# outfile.close()
-#
-# filename = 'randomized_tweet_vectors.txt'
-# outfile = open(filename, 'wb')
-# pickle.dump(randomized_tweet_vectors.txt, outfile)
-# outfile.close()
-#
-# filename = 'train_set.txt'
-# outfile = open(filename, 'wb')
-# pickle.dump(train_set.txt, outfile)
-# outfile.close()
-#
-# filename = 'test_set.txt'
-# outfile = open(filename, 'wb')
-# pickle.dump(test _set.txt, outfile)
-# outfile.close()
-#
-# # Get small subsets of train and test sets to make prototyping faster
-# small_train_set.txt = np.zeros((100, train_set.txt.shape[1]), dtype = int)
-# small_test_set.txt = np.zeros((100, test_set.txt.shape[1]), dtype = int)
-#
-# for x in range(100):
-#     for y in range(train_set.txt.shape[1]):
-#         small_train_set.txt[x][y] = train_set.txt[x][y]
-#         small_test_set.txt[x][y] = test_set.txt[x][y]
-#
-# # Pickle prototyping sets
-# filename = 'small_train_set.txt'
-# outfile = open(filename, 'wb')
-# pickle.dump(small_train_set.txt, outfile)
-# outfile.close()
-#
-# filename = 'small_test_set.txt'
-# outfile = open(filename, 'wb')
-# pickle.dump(small_test_set.txt, outfile)
+# pickle.dump(num_trump_tweets, outfile,)
 # outfile.close()
 
-# num_trump_tweets = len(trump_tweets)
-# filename = 'num_tweet_types'
-# outfile = open(filename, 'wb')
-# pickle.dump(num_trump_tweets, outfile)
-# outfile.close()
+filename = 'tweet_vectors.txt'
+outfile = open(filename, 'wb')
+pickle.dump(tweet_vectors, outfile, protocol=4)
+outfile.close()
+
+filename = 'randomized_tweet_vectors.txt'
+outfile = open(filename, 'wb')
+pickle.dump(randomized_tweet_vectors, outfile, protocol=4)
+outfile.close()
+
+filename = 'train_set.txt'
+outfile = open(filename, 'wb')
+pickle.dump(train_set, outfile, protocol=4)
+outfile.close()
+
+filename = 'test_set.txt'
+outfile = open(filename, 'wb')
+pickle.dump(test_set, outfile, protocol=4)
+outfile.close()
+
+# Get small subsets of train and test sets to make prototyping faster
+small_train_set = np.zeros((100, train_set.shape[1]), dtype = int)
+small_test_set = np.zeros((100, test_set.shape[1]), dtype = int)
+
+for x in range(100):
+    for y in range(train_set.shape[1]):
+        small_train_set[x][y] = train_set[x][y]
+        small_test_set[x][y] = test_set[x][y]
+
+# Pickle prototyping sets
+filename = 'small_train_set.txt'
+outfile = open(filename, 'wb')
+pickle.dump(small_train_set, outfile)
+outfile.close()
+
+filename = 'small_test_set.txt'
+outfile = open(filename, 'wb')
+pickle.dump(small_test_set, outfile)
+outfile.close()
 
 #  # Test using a known Trump tweet
 # tweet = "$55.15M will be on its way to @KYTC to widen @mtnparkway from two lanes to four lanes between the KY 191 overpass and the KY 205 interchange. Must keep the people of Kentucky moving efficiently and safely!"
-# tweet = clean_text(corpus.txt, tweet)
-# tweet_vector = individual_tweet_vectorizer(corpus.txt, tweet, 0, 'trump')
-# print(predict(tweet_vector, train_set.txt))
+# tweet = clean_text(corpus, tweet)
+# tweet_vector = individual_tweet_vectorizer(corpus, tweet, 0, 'trump')
+# print(predict(tweet_vector, train_set))
 #
 # print(all_tweets[-200])
 # # Test using a known general string
 # # tweet = all_tweets[-200]
-# tweet_vector = individual_tweet_vectorizer(corpus.txt, all_tweets[-200], -200)
-# print(predict(tweet_vector, train_set.txt))
+# tweet_vector = individual_tweet_vectorizer(corpus, all_tweets[-200], -200)
+# print(predict(tweet_vector, train_set))
 # print(all_tweets[11303])
 # print(all_tweets[6289])
 
 # Get a random tweet from the test set, and predict Trump vs. general
-index = np.random.randint(0, len(test_set), dtype=int)
-tweet_vector = np.zeros((1, test_set.shape[1]), dtype=int)
-for x in range(test_set.shape[1]):
-    tweet_vector[0][x] = test_set[index][x]
-
-print(predict(tweet_vector, train_set))
-index = tweet_vector[0][-2]
-print(all_tweets[index])
-
-
-# Old ideas, will remove later if not needed
-
-
-# Associate Trump words with their frequencies
-# counts = Counter(trump_words)
-
-
-# Test using .csv email data
-# data = read_file('email_metadata_merged_with_newsletters.csv')
+# index = np.random.randint(0, len(test_set), dtype=int)
+# tweet_vector = np.zeros((1, test_set.shape[1]), dtype=int)
+# for x in range(test_set.shape[1]):
+#     tweet_vector[0][x] = test_set[index][x]
 #
-#
-# # Get only email text data from knn
-# text_blocks = []
-# for i in range(1, len(data)):
-#     text_blocks.append(data[i][4])
-#
-# print(text_blocks[:10])
-# words = get_words((text_blocks))
-# print(words[:100])
-
-# Incorrect apostrophe handling
-# print(text_blocks[0])
-# words = get_words(text_blocks[0])
-# print(words[:10])
-
-# But other punctuation is handled correctly
-# print(text_blocks[4])
-# words_test1 = get_words(text_blocks[4])
-# print(words_test1[:1000])
-
-# And apostrophes *are* handled correctly for data entered manually
-# words_test2 = get_words(["laura's testing this code", 'testing testy test'])
-# print(words_test2[:10])
+# print(predict(tweet_vector, train_set))
+# index = tweet_vector[0][-2]
+# print(all_tweets[index])
