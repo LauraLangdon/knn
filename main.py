@@ -30,23 +30,23 @@ infile.close()
 # infile = open('test_set.txt', 'rb')
 # test_set = pickle.load(infile)
 # infile.close()
-#
-# infile = open('small_train_set.txt', 'rb')
-# train_set = pickle.load(infile)
-# infile.close()
-#
-# infile = open('small_test_set.txt', 'rb')
-# test_set = pickle.load(infile)
-# infile.close()
-#
-# infile = open('tweet_vectors.txt', 'rb')
-# tweet_vectors = pickle.load(infile)
-# infile.close()
-#
-# infile = open('randomized_tweet_vectors.txt', 'rb')
-# randomized_tweet_vectors = pickle.load(infile)
-# infile.close()
-#
+
+infile = open('small_train_set.txt', 'rb')
+train_set = pickle.load(infile)
+infile.close()
+
+infile = open('small_test_set.txt', 'rb')
+test_set = pickle.load(infile)
+infile.close()
+
+infile = open('tweet_vectors.txt', 'rb')
+tweet_vectors = pickle.load(infile)
+infile.close()
+
+infile = open('randomized_tweet_vectors.txt', 'rb')
+randomized_tweet_vectors = pickle.load(infile)
+infile.close()
+
 
 # Get list of stop words
 get_stop_words = open('stop_words.txt', 'r')
@@ -223,10 +223,12 @@ def knn(tweet_vector, train_set, k) -> list:
     """
     knn_indices_and_distances = []
     distance = 0
+
     for x in range(len(train_set)):
         distance = get_distance(tweet_vector[0], train_set[x])
         knn_indices_and_distances.append([train_set[x][-2], distance])
 
+    #  Sort by distance (smallest to largest)
     knn_indices_and_distances.sort(key=lambda x: x[1])
 
     return knn_indices_and_distances[:k]
@@ -314,41 +316,41 @@ def predict(tweet_vector, train_set, k = 9) -> str:
 #         all_tweets.append(clean_text(corpus, x[3]))
 #
 # print('Finished reading general tweets')
-
-# Initialize tweet vectors
-tweet_vectors = np.zeros((len(all_tweets), len(corpus) + 2), dtype = int)
-for word in range(len(corpus)):
-    for tweet in range(len(all_tweets)):
-        if corpus[word] in all_tweets[tweet]:
-            tweet_vectors[tweet][word] = 1
-
-print('Finished initializing tweet vectors ')
-
-# Label tweets as Trump or general, and keep track of index
-for i in range(len(all_tweets)):
-    if i <= num_trump_tweets:
-        tweet_vectors[i][-1] = 1  # Label second-to-last value with 1 for Trump
-    else:
-        tweet_vectors[i][-1] = 0
-
-    tweet_vectors[i][-2] = i   # Keep track of index in all_tweets for interpretation
-                                                             # after randomization
-
-print('Finished labelling tweets')
-print('tweet_vectors.shape: ')
-print(tweet_vectors.shape)
-
-# Make train and test sets
-randomized_tweet_vectors = randomize_vectors(tweet_vectors)
-print('randomized vectors shape')
-print(randomized_tweet_vectors.shape)
-
-train_set, test_set = split_train_test(tweet_vectors, randomized_tweet_vectors)
-print('train set shape')
-print(train_set.shape)
-print('test set shape')
-print(test_set.shape)
-
+#
+# # Initialize tweet vectors
+# tweet_vectors = np.zeros((len(all_tweets), len(corpus) + 2), dtype = int)
+# for word in range(len(corpus)):
+#     for tweet in range(len(all_tweets)):
+#         if corpus[word] in all_tweets[tweet]:
+#             tweet_vectors[tweet][word] = 1
+#
+# print('Finished initializing tweet vectors ')
+#
+# # Label tweets as Trump or general, and keep track of index
+# for i in range(len(all_tweets)):
+#     if i <= num_trump_tweets:
+#         tweet_vectors[i][-1] = 1  # Label second-to-last value with 1 for Trump
+#     else:
+#         tweet_vectors[i][-1] = 0
+#
+#     tweet_vectors[i][-2] = i   # Keep track of index in all_tweets for interpretation
+#                                                              # after randomization
+#
+# print('Finished labelling tweets')
+# print('tweet_vectors.shape: ')
+# print(tweet_vectors.shape)
+#
+# # Make train and test sets
+# randomized_tweet_vectors = randomize_vectors(tweet_vectors)
+# print('randomized vectors shape')
+# print(randomized_tweet_vectors.shape)
+#
+# train_set, test_set = split_train_test(tweet_vectors, randomized_tweet_vectors)
+# print('train set shape')
+# print(train_set.shape)
+# print('test set shape')
+# print(test_set.shape)
+#
 # # Pickle corpus, tweets, tweet vectors, randomized tweet vectors, train set, and test set
 # filename = 'corpus.txt'
 # outfile = open(filename, 'wb')
@@ -359,52 +361,52 @@ print(test_set.shape)
 # outfile = open(filename, 'wb')
 # pickle.dump(all_tweets, outfile)
 # outfile.close()
-
+#
 # filename = 'num_trump_tweets.txt'
 # outfile = open(filename, 'wb')
 # pickle.dump(num_trump_tweets, outfile,)
 # outfile.close()
-
-filename = 'tweet_vectors.txt'
-outfile = open(filename, 'wb')
-pickle.dump(tweet_vectors, outfile, protocol=4)
-outfile.close()
-
-filename = 'randomized_tweet_vectors.txt'
-outfile = open(filename, 'wb')
-pickle.dump(randomized_tweet_vectors, outfile, protocol=4)
-outfile.close()
-
-filename = 'train_set.txt'
-outfile = open(filename, 'wb')
-pickle.dump(train_set, outfile, protocol=4)
-outfile.close()
-
-filename = 'test_set.txt'
-outfile = open(filename, 'wb')
-pickle.dump(test_set, outfile, protocol=4)
-outfile.close()
-
-# Get small subsets of train and test sets to make prototyping faster
-small_train_set = np.zeros((100, train_set.shape[1]), dtype = int)
-small_test_set = np.zeros((100, test_set.shape[1]), dtype = int)
-
-for x in range(100):
-    for y in range(train_set.shape[1]):
-        small_train_set[x][y] = train_set[x][y]
-        small_test_set[x][y] = test_set[x][y]
-
-# Pickle prototyping sets
-filename = 'small_train_set.txt'
-outfile = open(filename, 'wb')
-pickle.dump(small_train_set, outfile)
-outfile.close()
-
-filename = 'small_test_set.txt'
-outfile = open(filename, 'wb')
-pickle.dump(small_test_set, outfile)
-outfile.close()
-
+#
+# filename = 'tweet_vectors.txt'
+# outfile = open(filename, 'wb')
+# pickle.dump(tweet_vectors, outfile, protocol=4)
+# outfile.close()
+#
+# filename = 'randomized_tweet_vectors.txt'
+# outfile = open(filename, 'wb')
+# pickle.dump(randomized_tweet_vectors, outfile, protocol=4)
+# outfile.close()
+#
+# filename = 'train_set.txt'
+# outfile = open(filename, 'wb')
+# pickle.dump(train_set, outfile, protocol=4)
+# outfile.close()
+#
+# filename = 'test_set.txt'
+# outfile = open(filename, 'wb')
+# pickle.dump(test_set, outfile, protocol=4)
+# outfile.close()
+#
+# # Get small subsets of train and test sets to make prototyping faster
+# small_train_set = np.zeros((100, train_set.shape[1]), dtype = int)
+# small_test_set = np.zeros((100, test_set.shape[1]), dtype = int)
+#
+# for x in range(100):
+#     for y in range(train_set.shape[1]):
+#         small_train_set[x][y] = train_set[x][y]
+#         small_test_set[x][y] = test_set[x][y]
+#
+# # Pickle prototyping sets
+# filename = 'small_train_set.txt'
+# outfile = open(filename, 'wb')
+# pickle.dump(small_train_set, outfile)
+# outfile.close()
+#
+# filename = 'small_test_set.txt'
+# outfile = open(filename, 'wb')
+# pickle.dump(small_test_set, outfile)
+# outfile.close()
+#
 #  # Test using a known Trump tweet
 # tweet = "$55.15M will be on its way to @KYTC to widen @mtnparkway from two lanes to four lanes between the KY 191 overpass and the KY 205 interchange. Must keep the people of Kentucky moving efficiently and safely!"
 # tweet = clean_text(corpus, tweet)
@@ -420,11 +422,11 @@ outfile.close()
 # print(all_tweets[6289])
 
 # Get a random tweet from the test set, and predict Trump vs. general
-# index = np.random.randint(0, len(test_set), dtype=int)
-# tweet_vector = np.zeros((1, test_set.shape[1]), dtype=int)
-# for x in range(test_set.shape[1]):
-#     tweet_vector[0][x] = test_set[index][x]
-#
-# print(predict(tweet_vector, train_set))
-# index = tweet_vector[0][-2]
-# print(all_tweets[index])
+index = np.random.randint(0, len(test_set), dtype=int)
+tweet_vector = np.zeros((1, test_set.shape[1]), dtype=int)
+for x in range(test_set.shape[1]):
+    tweet_vector[0][x] = test_set[index][x]
+
+print(predict(tweet_vector, train_set))
+index = tweet_vector[0][-2]
+print(all_tweets[index])
