@@ -329,11 +329,11 @@ def predict(tweet_vector, train_set, k = 9) -> str:
 # # Label tweets as Trump or general, and keep track of index
 # for i in range(len(all_tweets)):
 #     if i <= num_trump_tweets:
-#         tweet_vectors[i][-1] = 1  # Label second-to-last value with 1 for Trump
+#         tweet_vectors[i][-1] = 1  # Label last value with 1 for Trump
 #     else:
 #         tweet_vectors[i][-1] = 0
 #
-#     tweet_vectors[i][-2] = i   # Keep track of index in all_tweets for interpretation
+#     tweet_vectors[i][-2] = i   # Store index as second-to-last variable for interpretation
 #                                                              # after randomization
 #
 # print('Finished labelling tweets')
