@@ -408,7 +408,9 @@ def predict(tweet_vector, train_set, k = 9) -> str:
 # outfile.close()
 #
 #  # Test using a known Trump tweet
-# tweet = "$55.15M will be on its way to @KYTC to widen @mtnparkway from two lanes to four lanes between the KY 191 overpass and the KY 205 interchange. Must keep the people of Kentucky moving efficiently and safely!"
+# tweet = "$55.15M will be on its way to @KYTC to widen @mtnparkway from two lanes
+# to four lanes between the KY 191 overpass and the KY 205 interchange. Must keep the
+# people of Kentucky moving efficiently and safely!"
 # tweet = clean_text(corpus, tweet)
 # tweet_vector = individual_tweet_vectorizer(corpus, tweet, 0, 'trump')
 # print(predict(tweet_vector, train_set))
