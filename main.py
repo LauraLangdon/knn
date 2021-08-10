@@ -234,7 +234,7 @@ def knn(tweet_vector, train_set, k) -> list:
     return knn_indices_and_distances[:k]
 
 
-def majority_vote(tweet_vector, train_set, k) -> str:
+def majority_vote(tweet_vector, train_set, k = 9) -> str:
     """
     Count how many of the k-NN tweets were written by Trump or not-Trump,
     and return whichever is larger
@@ -245,8 +245,9 @@ def majority_vote(tweet_vector, train_set, k) -> str:
 
     :return: Whether tweet was authored by Trump, not Trump, or draw
     """
+   #  If k is even, subtract 1 so there can't be a draw
     if k % 2 == 0:
-        k = k - 1
+     k = k - 1
     knn_indices_and_distances = knn(tweet_vector, train_set, k)
 
     trump_votes = 0
@@ -263,37 +264,35 @@ def majority_vote(tweet_vector, train_set, k) -> str:
 
     if trump_votes > general_votes:
         return 'Trump'
-    elif general_votes > trump_votes:
-        return 'Not Trump'
     else:
-        return 'Draw'
-
-
-def predict(tweet_vector, train_set, k = 9) -> str:
-    """
-    Predict whether a given tweet was written by Trump
-
-    :param tweet_vector: vector of given tweet
-    :param train_set: training set
-    :param k: desired number of nearest neighbors
-
-    :return: prediction of whether tweet was authored by Trump
-    """
-    if majority_vote(tweet_vector, train_set, k) == 'Trump':
-        return 'Trump'
-    elif majority_vote(tweet_vector, train_set, k) == 'Not Trump':
         return 'Not Trump'
-    else:
-        if k > 2:
-            predict(tweet_vector, train_set, k = k - 2)
-        else:
-            return 'Draw: no prediction'
+
+
+# def predict(tweet_vector, train_set, k = 9) -> str:
+#     """
+#     Predict whether a given tweet was written by Trump
+#
+#     :param tweet_vector: vector of given tweet
+#     :param train_set: training set
+#     :param k: desired number of nearest neighbors
+#
+#     :return: prediction of whether tweet was authored by Trump
+#     """
+#     if majority_vote(tweet_vector, train_set, k) == 'Trump':
+#         return 'Trump'
+#     elif majority_vote(tweet_vector, train_set, k) == 'Not Trump':
+#         return 'Not Trump'
+#     else:
+#         if k > 2:
+#             predict(tweet_vector, train_set, k = k - 2)
+#         else:
+#             return 'Draw: no prediction'
 
 
 # # Initial setup of corpus and vectorizers, all of which then get pickled
 #
-# corpus = []
-# all_tweets = []
+# corpus = []  # Store every word from every tweet into a single array with no repeats
+# all_tweets = []  # Create a single array containing all tweets
 #
 # Get and clean tweet data for Trump (also adds words from tweets to corpus)
 # trump_tweets = read_file('tweets.json', key_name='text')
@@ -429,6 +428,6 @@ tweet_vector = np.zeros((1, test_set.shape[1]), dtype=int)
 for x in range(test_set.shape[1]):
     tweet_vector[0][x] = test_set[index][x]
 
-print(predict(tweet_vector, train_set))
+print(majority_vote(tweet_vector, train_set))
 index = tweet_vector[0][-2]
 print(all_tweets[index])
