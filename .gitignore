@@ -2,3 +2,4 @@
 .idea/
 venv//sphinx/_build
 /sphinx/_build
+.DS_STORE
