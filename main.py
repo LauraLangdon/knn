@@ -1,25 +1,25 @@
-import gzip
 import csv
-import re
-from typing import List, Tuple
-import string
+import gzip
 import json
-from collections import Counter
-import numpy as np
-import pickle
 import math
+import pickle
+import re
+import string
+from typing import List, Tuple
+
+import numpy as np
 
 # Unpickle corpus, tweets, tweet vectors, randomized tweet vectors,
 #                   train set, test set,
-infile = open('corpus.txt', 'rb')
+infile = open("corpus.txt", "rb")
 corpus = pickle.load(infile)
 infile.close()
 
-infile = open('tweets.txt', 'rb')
+infile = open("tweets.txt", "rb")
 all_tweets = pickle.load(infile)
 infile.close()
 
-infile = open('num_trump_tweets.txt', 'rb')
+infile = open("num_trump_tweets.txt", "rb")
 num_trump_tweets = pickle.load(infile)
 infile.close()
 
@@ -31,29 +31,29 @@ infile.close()
 # test_set = pickle.load(infile)
 # infile.close()
 
-infile = open('small_train_set.txt', 'rb')
+infile = open("small_train_set.txt", "rb")
 train_set = pickle.load(infile)
 infile.close()
 
-infile = open('small_test_set.txt', 'rb')
+infile = open("small_test_set.txt", "rb")
 test_set = pickle.load(infile)
 infile.close()
 
-infile = open('tweet_vectors.txt', 'rb')
+infile = open("tweet_vectors.txt", "rb")
 tweet_vectors = pickle.load(infile)
 infile.close()
 
-infile = open('randomized_tweet_vectors.txt', 'rb')
+infile = open("randomized_tweet_vectors.txt", "rb")
 randomized_tweet_vectors = pickle.load(infile)
 infile.close()
 
 
 # Get list of stop words
-get_stop_words = open('stop_words.txt', 'r')
+get_stop_words = open("stop_words.txt", "r", encoding="utf8")
 stop_words_list = get_stop_words.read()
 
 
-def read_file(file_name: str, key_name='') -> list:
+def read_file(file_name: str, key_name="") -> List:
     """
     Open and read csv.gz, .tsv, .csv, or JSON file; return as list
 
@@ -64,32 +64,35 @@ def read_file(file_name: str, key_name='') -> list:
     """
 
     # Determine whether file is of type csv.gz, tsv, csv, or JSON
-    if file_name[-6:] == 'csv.gz':
-        data_file = gzip.open(file_name, mode='rt')
+    if file_name[-6:] == "csv.gz":
+        data_file = gzip.open(file_name, mode="rt")
         data_list = csv_list_maker(data_file)
 
-    elif file_name[-3:] == 'tsv':
-        data_file = open(file_name, newline="")
+    elif file_name[-3:] == "tsv":
+        data_file = open(file_name, newline="", encoding="utf8")
         data_list = csv_list_maker(data_file, delimiter="\t")
 
-    elif file_name[-3] == 'csv':
-        data_file = open(file_name)
+    elif file_name[-3] == "csv":
+        data_file = open(file_name, encoding="utf8")
         data_list = csv_list_maker(data_file)
 
-    elif file_name[-4:] == 'json':
-        with open(file_name, 'r') as read_file:
-            data_file = json.load(read_file)
+    elif file_name[-4:] == "json":
+        with open(file_name, "r", encoding="utf8") as file_in:
+            data_file = json.load(file_in)
             data_list = []
             for item in range(len(data_file)):
                 data_list.append(data_file[item][key_name])
     else:
-        print('Unusable file type. Please submit file of type csv.gz, .csv, .tsv, or JSON')
+        print(
+            "Unusable file type. Please submit file of type csv.gz, .csv,"
+            ".tsv, or JSON"
+        )
         return []
 
     return data_list
 
 
-def csv_list_maker(data_file, delimiter=',') -> list:
+def csv_list_maker(data_file, delimiter=",") -> list:
     """
     Turn data in csv form into list form
 
@@ -114,15 +117,15 @@ def clean_text(corpus, input_string: str) -> list:
 
     :return: output_string_as_list: cleaned list of words from input string
     """
-    input_string = re.split(r'\W+', input_string)
+    input_string = re.split(r"\W+", input_string)
     output_string_as_list = []
     for word in input_string:
         if word in stop_words_list:
             continue
         for char in word:
-            if char in string.punctuation or char.isnumeric() or char == ' ':
-                word = word.replace(char, '')
-        if word == '':
+            if char in string.punctuation or char.isnumeric() or char == " ":
+                word = word.replace(char, "")
+        if word == "":
             continue
         if word.lower() not in corpus:
             corpus.append(word.lower())
@@ -139,8 +142,10 @@ def randomize_vectors(tweet_vectors):
     :return: randomized_tweet_vectors: a Numpy array of tweet vectors that have
                  been randomly shuffled
     """
-    #Initialize randomized tweet vectors
-    randomized_tweet_vectors = np.zeros((tweet_vectors.shape[0], tweet_vectors.shape[1]), dtype=int)
+    # Initialize randomized tweet vectors
+    randomized_tweet_vectors = np.zeros(
+        (tweet_vectors.shape[0], tweet_vectors.shape[1]), dtype=int
+    )
     for x in range(tweet_vectors.shape[0]):
         for y in range(tweet_vectors.shape[1]):
             randomized_tweet_vectors[x][y] = tweet_vectors[x][y]
@@ -148,7 +153,8 @@ def randomize_vectors(tweet_vectors):
 
     return randomized_tweet_vectors
 
-def split_train_test(tweet_vectors, randomized_tweet_vectors) -> tuple:
+
+def split_train_test(tweet_vectors, randomized_tweet_vectors) -> Tuple:
     """
     Split into train and test sets
 
@@ -156,8 +162,11 @@ def split_train_test(tweet_vectors, randomized_tweet_vectors) -> tuple:
 
     :return: train_set, test_set tuple of train set and test set
     """
-    x_train_dim = math.floor(0.8 * tweet_vectors.shape[0])  # Use 80% of data for train set
-    x_test_dim = math.ceil(0.2 * tweet_vectors.shape[0])  # Use 20% of data for test set
+    x_train_dim = math.floor(
+        0.8 * tweet_vectors.shape[0]
+    )  # Use 80% of data for train set
+    # Use 20% of data for test set
+    x_test_dim = math.ceil(0.2 * tweet_vectors.shape[0])
     y_dim = tweet_vectors.shape[1]
 
     train_set = np.zeros((x_train_dim, y_dim), dtype=int)
@@ -173,7 +182,7 @@ def split_train_test(tweet_vectors, randomized_tweet_vectors) -> tuple:
     return train_set, test_set
 
 
-def individual_tweet_vectorizer(corpus, tweet, index=0, author=''):
+def individual_tweet_vectorizer(corpus, tweet, index=0, author=""):
     """
     Formats a single tweet as a vector
 
@@ -188,9 +197,12 @@ def individual_tweet_vectorizer(corpus, tweet, index=0, author=''):
     for word in range(len(corpus)):
         if corpus[word] in tweet:
             individual_tweet_vector[0][word] = 1
-    if author != '':  # If author is specified, set the last value of the tweet vector to 1
+    if (
+        author != ""
+    ):  # If author is specified, set the last value of the tweet vector to 1
         individual_tweet_vector[0][-1] = 1
-    individual_tweet_vector[0][-2] = index  # Keep track of index of tweet for interpretation
+    # Keep track of index of tweet for interpretation
+    individual_tweet_vector[0][-2] = index
     return individual_tweet_vector
 
 
@@ -218,8 +230,8 @@ def knn(tweet_vector, train_set, k) -> list:
     :param train_set: training set
     :param k: desired number of nearest neighbors
 
-    :return: list of indices in main tweet list of k nearest neighbors, and distances of those
-            neighbors to given tweet
+    :return: list of indices in main tweet list of k nearest neighbors, and
+    distances of those  neighbors to given tweet
     """
     knn_indices_and_distances = []
     distance = 0
@@ -234,7 +246,7 @@ def knn(tweet_vector, train_set, k) -> list:
     return knn_indices_and_distances[:k]
 
 
-def majority_vote(tweet_vector, train_set, k = 9) -> str:
+def majority_vote(tweet_vector, train_set, k=9) -> str:
     """
     Count how many of the k-NN tweets were written by Trump or not-Trump,
     and return whichever is larger
@@ -245,9 +257,9 @@ def majority_vote(tweet_vector, train_set, k = 9) -> str:
 
     :return: Whether tweet was authored by Trump, not Trump, or draw
     """
-   #  If k is even, subtract 1 so there can't be a draw
+    #  If k is even, subtract 1 so there can't be a draw
     if k % 2 == 0:
-     k = k - 1
+        k = k - 1
     knn_indices_and_distances = knn(tweet_vector, train_set, k)
 
     trump_votes = 0
@@ -263,9 +275,9 @@ def majority_vote(tweet_vector, train_set, k = 9) -> str:
             # print(general_votes)
 
     if trump_votes > general_votes:
-        return 'Trump'
+        return "Trump"
     else:
-        return 'Not Trump'
+        return "Not Trump"
 
 
 # def predict(tweet_vector, train_set, k = 9) -> str:
@@ -291,12 +303,14 @@ def majority_vote(tweet_vector, train_set, k = 9) -> str:
 
 # # Initial setup of corpus and vectorizers, all of which then get pickled
 #
-# corpus = []  # Store every word from every tweet into a single array with no repeats
+# corpus = []  # Store every word from every tweet into a single array with no
+# repeats
 # all_tweets = []  # Create a single array containing all tweets
 #
 # Get and clean tweet data for Trump (also adds words from tweets to corpus)
 # trump_tweets = read_file('tweets.json', key_name='text')
-# num_trump_tweets = len(trump_tweets)    # Store this value to use later for labeling
+# num_trump_tweets = len(trump_tweets)    # Store this value to use later for
+# labeling
 #
 # for item in range(len(trump_tweets)):
 #     tweet = trump_tweets[item]
@@ -332,8 +346,8 @@ def majority_vote(tweet_vector, train_set, k = 9) -> str:
 #     else:
 #         tweet_vectors[i][-1] = 0
 #
-#     tweet_vectors[i][-2] = i   # Store index as second-to-last variable for interpretation
-#                                                              # after randomization
+#     tweet_vectors[i][-2] = i   # Store index as second-to-last variable for
+# interpretation after randomization
 #
 # print('Finished labelling tweets')
 # print('tweet_vectors.shape: ')
@@ -344,13 +358,16 @@ def majority_vote(tweet_vector, train_set, k = 9) -> str:
 # print('randomized vectors shape')
 # print(randomized_tweet_vectors.shape)
 #
-# train_set, test_set = split_train_test(tweet_vectors, randomized_tweet_vectors)
+# train_set, test_set = split_train_test(
+# tweet_vectors,
+# randomized_tweet_vectors)
 # print('train set shape')
 # print(train_set.shape)
 # print('test set shape')
 # print(test_set.shape)
 #
-# # Pickle corpus, tweets, tweet vectors, randomized tweet vectors, train set, and test set
+# # Pickle corpus, tweets, tweet vectors, randomized tweet vectors, train set,
+# and test set
 # filename = 'corpus.txt'
 # outfile = open(filename, 'wb')
 # pickle.dump(corpus, outfile)
@@ -407,8 +424,10 @@ def majority_vote(tweet_vector, train_set, k = 9) -> str:
 # outfile.close()
 #
 #  # Test using a known Trump tweet
-# tweet = "$55.15M will be on its way to @KYTC to widen @mtnparkway from two lanes
-# to four lanes between the KY 191 overpass and the KY 205 interchange. Must keep the
+# tweet = "$55.15M will be on its way to @KYTC to widen @mtnparkway from two
+# lanes
+# to four lanes between the KY 191 overpass and the KY 205 interchange. Must
+# keep the
 # people of Kentucky moving efficiently and safely!"
 # tweet = clean_text(corpus, tweet)
 # tweet_vector = individual_tweet_vectorizer(corpus, tweet, 0, 'trump')
